@@ -1,2 +1,2 @@
-GAW GAW GAW GAW GAW# EbookBuddy
+# EbookBuddy
 Class 12 final project
