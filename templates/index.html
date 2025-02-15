@@ -1,0 +1,198 @@
+{% extends 'layout.html' %}
+
+{% block title %} Main Page {% endblock %}
+
+{% block body %}
+
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+                <a class="nav-link active" aria-current="page" id="fileLink" href="#">Add ePub</a>
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Get eBooks
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a class="dropdown-item" href="https://www.gutenberg.org/" target="_blank">Project Gutenberg</a>
+                        <a class="dropdown-item" href="https://archive.org/details/texts" target="_blank">Internet Archive</a>
+                        <a class="dropdown-item" href="https://openlibrary.org/" target="_blank">Open Library</a>
+                        <a class="dropdown-item" href="https://manybooks.net/" target="_blank">Manybooks</a>
+                    </div>
+                </div>
+                <a class="nav-link" href="{{ url_for('credits')}}">Credits</a>
+            </div>
+            <div class="navbar-nav ms-auto">
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="bd-theme" data-bs-toggle="dropdown" aria-expanded="false">
+                        Theme Toggle
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="bd-theme">
+                        <li>
+                            <button class="dropdown-item" data-bs-theme-value="light">
+                                <i class="bi bi-sun"></i> Light
+                            </button>
+                        </li>
+                        <li>
+                            <button class="dropdown-item" data-bs-theme-value="dark">
+                                <i class="bi bi-moon"></i> Dark
+                            </button>
+                        </li>
+                        <li>
+                            <button class="dropdown-item" data-bs-theme-value="auto">
+                                <i class="bi bi-circle-half"></i> Auto
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+<div style="display: flex; flex-wrap: wrap;">
+    {% for book in books %}
+        <div class="book-container">
+            <a id="{{ book[0] }}" href="{{ url_for('book_details', id=book[0]) }}">
+                <img src="{{ url_for('static', filename='images/' ~ book[-2] ~ '.png') }}" class="book-cover" draggable="false" alt="Book Cover">
+                <div class="book-card">
+                    {{book[2]}}<br>
+                    {{book[4]}}
+                </div>
+            </a>
+        </div>      
+    {% endfor %}
+</div>
+<form id="addFile" method="post" action="/add-file" enctype="multipart/form-data" style="display: none;">
+    <input id="fileInput" type="file" name="file" style="display: none;" />
+</form>
+
+<div id="fileContent"></div>
+
+<script>
+    document.getElementById('fileLink').addEventListener('click', function(event) {
+        event.preventDefault(); // Prevent default anchor behavior
+        document.getElementById('fileInput').click();
+    });
+    
+    document.getElementById('fileInput').addEventListener('change', function() {
+        document.getElementById('addFile').submit();
+    });
+
+    // Handle form submission response
+    document.getElementById('addFile').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        var formData = new FormData(this);
+
+        fetch('/add-file', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Check if the message is present in the response
+            if (data.message) {
+                // Handle the message if needed
+            } else {
+                // Handle success if needed
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+
+    (() => {
+    'use strict';
+
+    const getStoredTheme = () => localStorage.getItem('theme');
+    const setStoredTheme = theme => localStorage.setItem('theme', theme);
+
+    const getPreferredTheme = () => {
+        const storedTheme = getStoredTheme();
+        if (storedTheme) {
+            return storedTheme;
+        }
+
+        // Default to dark mode
+        return 'dark';
+    };
+
+    const setTheme = theme => {
+        if (theme === 'auto') {
+            document.documentElement.setAttribute('data-bs-theme', (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+        } else {
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        }
+        console.log(`Theme set to: ${theme}`); // Debugging line
+    };
+
+    const showActiveTheme = (theme, focus = false) => {
+        const themeSwitcher = document.querySelector('#bd-theme');
+
+        if (!themeSwitcher) {
+            return;
+        }
+
+        const btnToActive = document.querySelector(`[data-bs-theme-value="${theme}"]`);
+        if (!btnToActive) {
+            return;
+        }
+
+        const svgOfActiveBtn = btnToActive.querySelector('i').className;
+        
+        document.querySelectorAll('[data-bs-theme-value]').forEach(element => {
+            element.classList.remove('active');
+            element.setAttribute('aria-pressed', 'false');
+        });
+
+        btnToActive.classList.add('active');
+        btnToActive.setAttribute('aria-pressed', 'true');
+
+        const activeThemeIcon = document.querySelector('.theme-icon-active use');
+        if (activeThemeIcon) {
+            activeThemeIcon.setAttribute('class', svgOfActiveBtn);
+        }
+
+        const themeSwitcherLabel = `Theme Toggle (${btnToActive.dataset.bsThemeValue})`;
+        themeSwitcher.setAttribute('aria-label', themeSwitcherLabel);
+
+        if (focus) {
+            themeSwitcher.focus();
+        }
+    };
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        const storedTheme = getStoredTheme();
+        if (storedTheme !== 'light' && storedTheme !== 'dark') {
+            setTheme(getPreferredTheme());
+        }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+        setTheme(getPreferredTheme());
+        showActiveTheme(getPreferredTheme());
+
+        document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const theme = toggle.getAttribute('data-bs-theme-value');
+                setStoredTheme(theme);
+                setTheme(theme);
+                showActiveTheme(theme, true);
+            });
+        });
+    });
+})();
+</script>
+
+{% endblock %}
+
+

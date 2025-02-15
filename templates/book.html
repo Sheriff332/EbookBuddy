@@ -1,0 +1,12 @@
+{% extends 'layout.html' %}
+
+{% block title %} eBook {% endblock %}
+
+{% block body %}
+
+    <a href="{{ url_for('index')}}"  class="back-button" style="background-color: rgb(30, 144, 255); width: 10%; text-align: center; color: white; padding: 10px; text-decoration: none; position:fixed; right:2%; top:2%">Back</a>
+    <div id="content">
+        {{ ebook_content | safe }}
+    </div>
+
+{% endblock %}

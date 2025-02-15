@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="{{ theme }}">
+
+<head>
+  <base href ="">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="stylesheet" href="{{url_for('static', filename='bootstrap.min.css')}}" >
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <style>
+    /* Disable text selection */
+    body {
+        -webkit-user-select: none; /* Safari */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* IE 10 and IE 11 */
+        user-select: none; /* Standard syntax */
+    }
+  </style>
+  <script type="text/javascript">
+    // Disable right-click menu
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+    });
+
+    // Disable link previews
+    document.addEventListener('DOMContentLoaded', function() {
+        var links = document.getElementsByTagName('a');
+        for (var i = 0; i < links.length; i++) {
+            links[i].addEventListener('mouseover', function(e) {
+                e.preventDefault();
+            });
+        }
+    });
+  </script>
+  <script>
+    (() => {
+        'use strict';
+    
+        const getStoredTheme = () => localStorage.getItem('theme');
+        const setStoredTheme = theme => localStorage.setItem('theme', theme);
+    
+        const getPreferredTheme = () => {
+            const storedTheme = getStoredTheme();
+            if (storedTheme) {
+                return storedTheme;
+            }
+    
+            // Default to dark mode
+            return 'dark';
+        };
+    
+        const setTheme = theme => {
+            if (theme === 'auto') {
+                document.documentElement.setAttribute('data-bs-theme', (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+            console.log(`Theme set to: ${theme}`); // Debugging line
+        };
+    
+        const showActiveTheme = (theme, focus = false) => {
+            const themeSwitcher = document.querySelector('#bd-theme');
+    
+            if (!themeSwitcher) {
+                return;
+            }
+    
+            const btnToActive = document.querySelector(`[data-bs-theme-value="${theme}"]`);
+            if (!btnToActive) {
+                return;
+            }
+    
+            const svgOfActiveBtn = btnToActive.querySelector('i').className;
+            
+            document.querySelectorAll('[data-bs-theme-value]').forEach(element => {
+                element.classList.remove('active');
+                element.setAttribute('aria-pressed', 'false');
+            });
+    
+            btnToActive.classList.add('active');
+            btnToActive.setAttribute('aria-pressed', 'true');
+    
+            const activeThemeIcon = document.querySelector('.theme-icon-active use');
+            if (activeThemeIcon) {
+                activeThemeIcon.setAttribute('class', svgOfActiveBtn);
+            }
+    
+            const themeSwitcherLabel = `Theme Toggle (${btnToActive.dataset.bsThemeValue})`;
+            themeSwitcher.setAttribute('aria-label', themeSwitcherLabel);
+    
+            if (focus) {
+                themeSwitcher.focus();
+            }
+        };
+    
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            const storedTheme = getStoredTheme();
+            if (storedTheme !== 'light' && storedTheme !== 'dark') {
+                setTheme(getPreferredTheme());
+            }
+        });
+    
+        window.addEventListener('DOMContentLoaded', () => {
+            setTheme(getPreferredTheme());
+            showActiveTheme(getPreferredTheme());
+    
+            document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
+                toggle.addEventListener('click', () => {
+                    const theme = toggle.getAttribute('data-bs-theme-value');
+                    setStoredTheme(theme);
+                    setTheme(theme);
+                    showActiveTheme(theme, true);
+                });
+            });
+        });
+    })();
+    </script>
+
+</head>
+
+<body>
+    {% block body %}{% endblock %}    
+    <script src="{{url_for('static', filename='bootstrap.bundle.min.js')}}" ></script>   
+</body>
+
+</html>
